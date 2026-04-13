@@ -6,7 +6,6 @@ import {
     useApp,
     useInput
 } from 'ink';
-import Gradient from 'ink-gradient';
 import React, {
     useCallback,
     useEffect,
@@ -321,9 +320,9 @@ export const App: React.FC = () => {
         <Box flexDirection='column'>
             <Box marginBottom={1}>
                 <Text bold>
-                    <Gradient name='retro'>
+                    <Text color="green">
                         CCStatusline Configuration
-                    </Gradient>
+                    </Text>
                 </Text>
                 <Text bold>
                     {` | ${getPackageVersion() && `v${getPackageVersion()}`}`}

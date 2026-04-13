@@ -1,7 +1,6 @@
 import { execFileSync } from 'child_process';
 import * as fs from 'fs';
 import * as https from 'https';
-import { HttpsProxyAgent } from 'https-proxy-agent';
 import * as os from 'os';
 import * as path from 'path';
 import { z } from 'zod';
@@ -414,8 +413,7 @@ function getUsageApiRequestOptions(token: string): https.RequestOptions | null {
                 'Authorization': `Bearer ${token}`,
                 'anthropic-beta': 'oauth-2025-04-20'
             },
-            timeout: USAGE_API_TIMEOUT_MS,
-            ...(proxyUrl ? { agent: new HttpsProxyAgent(proxyUrl) } : {})
+            timeout: USAGE_API_TIMEOUT_MS
         };
     } catch {
         return null;
