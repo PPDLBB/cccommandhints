@@ -13,7 +13,8 @@ export interface WidgetHookDef {
     matcher?: string;
 }
 
-const HOOK_TAG = 'ccstatusline-managed';
+const HOOK_TAG = 'cccommandhints-managed';
+const LEGACY_HOOK_TAG = 'ccstatusline-managed';
 
 interface HookEntry {
     _tag?: string;
@@ -23,7 +24,9 @@ interface HookEntry {
 
 function stripManagedHooks(hooks: Record<string, HookEntry[]>): void {
     for (const event of Object.keys(hooks)) {
-        hooks[event] = (hooks[event] ?? []).filter(entry => entry._tag !== HOOK_TAG);
+        hooks[event] = (hooks[event] ?? []).filter(
+            entry => entry._tag !== HOOK_TAG && entry._tag !== LEGACY_HOOK_TAG
+        );
         if (hooks[event].length === 0) {
             // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
             delete hooks[event];

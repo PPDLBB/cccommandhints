@@ -44,6 +44,11 @@ cccommandhints    # 或简称 cch
 claude    # 启动 Claude Code，底部显示命令提示
 ```
 
+## 兼容性
+
+- 安装后默认写入 `cccommandhints` 命令到 Claude Code `settings.json`
+- 仍兼容识别历史 `ccstatusline` 命令，避免升级后误判未安装
+
 ## 功能
 
 - **智能布局**：宽屏三列，窄屏轮换

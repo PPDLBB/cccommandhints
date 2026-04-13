@@ -22,14 +22,27 @@ const readFile = fs.promises.readFile;
 const writeFile = fs.promises.writeFile;
 const mkdir = fs.promises.mkdir;
 
-export const CCSTATUSLINE_COMMANDS = {
+export const CCOMMANDHINTS_COMMANDS = {
+    NPM: 'npx -y cccommandhints@latest',
+    BUNX: 'bunx -y cccommandhints@latest',
+    SELF_MANAGED: 'cccommandhints'
+};
+
+const LEGACY_COMMANDS = {
     NPM: 'npx -y ccstatusline@latest',
     BUNX: 'bunx -y ccstatusline@latest',
     SELF_MANAGED: 'ccstatusline'
 };
 
 export function isKnownCommand(command: string): boolean {
-    const prefixes = [CCSTATUSLINE_COMMANDS.NPM, CCSTATUSLINE_COMMANDS.BUNX, CCSTATUSLINE_COMMANDS.SELF_MANAGED];
+    const prefixes = [
+        CCOMMANDHINTS_COMMANDS.NPM,
+        CCOMMANDHINTS_COMMANDS.BUNX,
+        CCOMMANDHINTS_COMMANDS.SELF_MANAGED,
+        LEGACY_COMMANDS.NPM,
+        LEGACY_COMMANDS.BUNX,
+        LEGACY_COMMANDS.SELF_MANAGED
+    ];
     return prefixes.some(prefix => command === prefix || command.startsWith(`${prefix} --config `));
 }
 
@@ -234,8 +247,8 @@ export async function installStatusLine(useBunx = false): Promise<void> {
     }
 
     const baseCommand = useBunx
-        ? CCSTATUSLINE_COMMANDS.BUNX
-        : CCSTATUSLINE_COMMANDS.NPM;
+        ? CCOMMANDHINTS_COMMANDS.BUNX
+        : CCOMMANDHINTS_COMMANDS.NPM;
 
     // Update settings with our status line (confirmation already handled in TUI)
     settings.statusLine = {

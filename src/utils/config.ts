@@ -19,7 +19,7 @@ const readFile = fs.promises.readFile;
 const writeFile = fs.promises.writeFile;
 const mkdir = fs.promises.mkdir;
 
-const DEFAULT_SETTINGS_PATH = path.join(os.homedir(), '.config', 'ccstatusline', 'settings.json');
+const DEFAULT_SETTINGS_PATH = path.join(os.homedir(), '.config', 'cccommandhints', 'settings.json');
 
 let settingsPath = DEFAULT_SETTINGS_PATH;
 

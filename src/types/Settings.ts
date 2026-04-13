@@ -29,13 +29,7 @@ export const SettingsSchema = z.object({
         .min(1)
         .default([
             [
-                { id: '1', type: 'model', color: 'cyan' },
-                { id: '2', type: 'separator' },
-                { id: '3', type: 'context-length', color: 'brightBlack' },
-                { id: '4', type: 'separator' },
-                { id: '5', type: 'git-branch', color: 'magenta' },
-                { id: '6', type: 'separator' },
-                { id: '7', type: 'git-changes', color: 'yellow' }
+                { id: '1', type: 'command-hint', color: 'cyan' }
             ],
             [],
             []

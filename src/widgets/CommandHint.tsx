@@ -1,108 +1,13 @@
-import type { RenderContext } from '../types/RenderContext';
-import type { Settings } from '../types/Settings';
-import type {
-    CustomKeybind,
-    Widget,
-    WidgetEditorDisplay,
-    WidgetItem
+import { type RenderContext } from '../types/RenderContext';
+import { type Settings } from '../types/Settings';
+import {
+    type CustomKeybind,
+    type Widget,
+    type WidgetEditorDisplay,
+    type WidgetItem
 } from '../types/Widget';
-
-// Command hint data structure
-interface CommandHint {
-    cmd: string;
-    desc: string;
-}
-
-interface CommandGroup {
-    name: string;
-    color: string;
-    commands: CommandHint[];
-}
-
-// Predefined command groups
-const COMMAND_GROUPS: CommandGroup[] = [
-    {
-        name: '对话控制',
-        color: 'green',
-        commands: [
-            { cmd: '/clear', desc: '清除对话' },
-            { cmd: '/restart', desc: '重启会话' },
-            { cmd: '/rename', desc: '重命名' },
-            { cmd: '/compact', desc: '压缩历史' }
-        ]
-    },
-    {
-        name: '信息查看',
-        color: 'yellow',
-        commands: [
-            { cmd: '/cost', desc: '查看费用' },
-            { cmd: '/usage', desc: '查看用量' },
-            { cmd: '/status', desc: '查看状态' }
-        ]
-    },
-    {
-        name: '配置工具',
-        color: 'magenta',
-        commands: [
-            { cmd: '/config', desc: '查看配置' },
-            { cmd: '/api', desc: 'API设置' },
-            { cmd: '/mcp', desc: 'MCP管理' }
-        ]
-    }
-];
-
-// Scroll state manager using global state for continuous animation
-class ScrollStateManager {
-    private static instance: ScrollStateManager;
-    private positions: Map<string, number> = new Map();
-    private lastUpdate: number = Date.now();
-    private scrollInterval: number = 300;
-
-    static getInstance(): ScrollStateManager {
-        if (!ScrollStateManager.instance) {
-            ScrollStateManager.instance = new ScrollStateManager();
-        }
-        return ScrollStateManager.instance;
-    }
-
-    getOffset(key: string, textLength: number, visibleWidth: number): number {
-        if (textLength <= visibleWidth) {
-            return 0;
-        }
-
-        const now = Date.now();
-        const elapsed = now - this.lastUpdate;
-
-        if (elapsed >= this.scrollInterval) {
-            this.positions.forEach((pos, k) => {
-                const cycleLength = textLength + visibleWidth + 5;
-                this.positions.set(k, (pos + 1) % cycleLength);
-            });
-            this.lastUpdate = now;
-        }
-
-        let currentPos = this.positions.get(key) ?? 0;
-        if (!this.positions.has(key)) {
-            this.positions.set(key, 0);
-            currentPos = 0;
-        }
-
-        if (currentPos < visibleWidth) {
-            return 0;
-        } else if (currentPos < textLength + visibleWidth) {
-            return currentPos - visibleWidth;
-        } else {
-            return Math.max(0, textLength - visibleWidth);
-        }
-    }
-
-    reset(): void {
-        this.positions.clear();
-        this.lastUpdate = Date.now();
-    }
-}
-
-const scrollManager = ScrollStateManager.getInstance();
+import { COMMAND_GROUPS } from './command-hint/data';
+import { scrollManager } from './command-hint/scroll-manager';
 
 export class CommandHintWidget implements Widget {
     getDefaultColor(): string { return 'cyan'; }
@@ -166,7 +71,7 @@ export class CommandHintWidget implements Widget {
         const prefixWidth = rawValue ? 0 : 2;
         const availableWidth = Math.max(30, width - prefixWidth - 2);
 
-        const cycleIndex = Math.floor(Date.now() / 5000) % 3;
+        const cycleIndex = Math.floor(Date.now() / 5000) % COMMAND_GROUPS.length;
         const group = COMMAND_GROUPS[cycleIndex]!;
         const key = `${itemId}-v-${cycleIndex}`;
 
@@ -177,13 +82,13 @@ export class CommandHintWidget implements Widget {
     }
 
     private formatGroupContent(
-        group: CommandGroup,
+        group: { commands: Array<{ cmd: string; desc: string }> },
         maxWidth: number,
         enableScroll: boolean,
         scrollKey: string,
         rawValue: boolean
     ): string {
-        const delimiter = rawValue ? ', ' : ' \u00B7 ';
+        const delimiter = rawValue ? ', ' : ' · ';
         const parts = group.commands.map(cmd => `${cmd.cmd} ${cmd.desc}`);
         const fullText = parts.join(delimiter);
 
@@ -191,12 +96,11 @@ export class CommandHintWidget implements Widget {
             if (fullText.length < maxWidth) {
                 return fullText.padEnd(maxWidth, ' ');
             }
-            return fullText.substring(0, maxWidth - 1) + (rawValue ? '...' : '\u2026');
+            return fullText.substring(0, maxWidth - 1) + (rawValue ? '...' : '…');
         }
 
         const offset = scrollManager.getOffset(scrollKey, fullText.length, maxWidth);
         const visibleText = fullText.substring(offset, offset + maxWidth);
-
         return visibleText.padEnd(maxWidth, ' ');
     }
 

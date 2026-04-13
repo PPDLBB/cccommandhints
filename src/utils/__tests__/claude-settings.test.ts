@@ -13,7 +13,7 @@ import {
 
 import { DEFAULT_SETTINGS } from '../../types/Settings';
 import {
-    CCSTATUSLINE_COMMANDS,
+    CCOMMANDHINTS_COMMANDS,
     getClaudeSettingsPath,
     getExistingStatusLine,
     installStatusLine,
@@ -64,31 +64,31 @@ afterAll(() => {
 
 describe('isKnownCommand', () => {
     it('should match exact NPM command', () => {
-        expect(isKnownCommand(CCSTATUSLINE_COMMANDS.NPM)).toBe(true);
+        expect(isKnownCommand(CCOMMANDHINTS_COMMANDS.NPM)).toBe(true);
     });
 
     it('should match exact BUNX command', () => {
-        expect(isKnownCommand(CCSTATUSLINE_COMMANDS.BUNX)).toBe(true);
+        expect(isKnownCommand(CCOMMANDHINTS_COMMANDS.BUNX)).toBe(true);
     });
 
     it('should match exact SELF_MANAGED command', () => {
-        expect(isKnownCommand(CCSTATUSLINE_COMMANDS.SELF_MANAGED)).toBe(true);
+        expect(isKnownCommand(CCOMMANDHINTS_COMMANDS.SELF_MANAGED)).toBe(true);
     });
 
     it('should match NPM command with --config and simple path', () => {
-        expect(isKnownCommand(`${CCSTATUSLINE_COMMANDS.NPM} --config /tmp/settings.json`)).toBe(true);
+        expect(isKnownCommand(`${CCOMMANDHINTS_COMMANDS.NPM} --config /tmp/settings.json`)).toBe(true);
     });
 
     it('should match BUNX command with --config and quoted path with spaces', () => {
-        expect(isKnownCommand(`${CCSTATUSLINE_COMMANDS.BUNX} --config '/my path/settings.json'`)).toBe(true);
+        expect(isKnownCommand(`${CCOMMANDHINTS_COMMANDS.BUNX} --config '/my path/settings.json'`)).toBe(true);
     });
 
     it('should match command with --config and quoted path with parens', () => {
-        expect(isKnownCommand(`${CCSTATUSLINE_COMMANDS.NPM} --config '/my(path)/settings.json'`)).toBe(true);
+        expect(isKnownCommand(`${CCOMMANDHINTS_COMMANDS.NPM} --config '/my(path)/settings.json'`)).toBe(true);
     });
 
     it('should match command with --config and double-quoted Windows path', () => {
-        expect(isKnownCommand(`${CCSTATUSLINE_COMMANDS.NPM} --config "C:\\Users\\Alice\\My Settings\\settings.json"`)).toBe(true);
+        expect(isKnownCommand(`${CCOMMANDHINTS_COMMANDS.NPM} --config "C:\\Users\\Alice\\My Settings\\settings.json"`)).toBe(true);
     });
 
     it('should not match unknown commands', () => {
@@ -112,67 +112,54 @@ describe('buildCommand via installStatusLine', () => {
     it('should use base command when no custom config path', async () => {
         initConfigPath();
         await installStatusLine(false);
-        expect(readInstalledCommand()).toBe(CCSTATUSLINE_COMMANDS.NPM);
+        expect(readInstalledCommand()).toBe(CCOMMANDHINTS_COMMANDS.NPM);
     });
 
     it('should append --config with simple path (no quoting needed)', async () => {
         initConfigPath('/tmp/settings.json');
         await installStatusLine(false);
-        expect(readInstalledCommand()).toBe(`${CCSTATUSLINE_COMMANDS.NPM} --config /tmp/settings.json`);
+        expect(readInstalledCommand()).toBe(`${CCOMMANDHINTS_COMMANDS.NPM} --config /tmp/settings.json`);
     });
 
     it('should quote path with spaces', async () => {
         initConfigPath('/my path/settings.json');
         await installStatusLine(false);
-        expect(readInstalledCommand()).toBe(`${CCSTATUSLINE_COMMANDS.NPM} --config '/my path/settings.json'`);
+        expect(readInstalledCommand()).toBe(`${CCOMMANDHINTS_COMMANDS.NPM} --config '/my path/settings.json'`);
     });
 
     it('should quote path with parentheses', async () => {
         initConfigPath('/my(path)/settings.json');
         await installStatusLine(false);
-        expect(readInstalledCommand()).toBe(`${CCSTATUSLINE_COMMANDS.NPM} --config '/my(path)/settings.json'`);
+        expect(readInstalledCommand()).toBe(`${CCOMMANDHINTS_COMMANDS.NPM} --config '/my(path)/settings.json'`);
     });
 
     it('should escape embedded single quotes in path', async () => {
         initConfigPath('/my\'path/settings.json');
         await installStatusLine(false);
-        expect(readInstalledCommand()).toBe(`${CCSTATUSLINE_COMMANDS.NPM} --config '/my'\\''path/settings.json'`);
+        expect(readInstalledCommand()).toBe(`${CCOMMANDHINTS_COMMANDS.NPM} --config '/my'\\''path/settings.json'`);
     });
 
     it('should use bunx command when useBunx is true', async () => {
         initConfigPath('/my path/settings.json');
         await installStatusLine(true);
-        expect(readInstalledCommand()).toBe(`${CCSTATUSLINE_COMMANDS.BUNX} --config '/my path/settings.json'`);
+        expect(readInstalledCommand()).toBe(`${CCOMMANDHINTS_COMMANDS.BUNX} --config '/my path/settings.json'`);
     });
 
-    it('should sync hooks on install when settings include hook-enabled widgets', async () => {
-        const configPath = path.join(testClaudeConfigDir, 'ccstatusline-settings.json');
+    it('should not add hooks when no hook-enabled widgets are present', async () => {
+        const configPath = path.join(testClaudeConfigDir, 'cccommandhints-settings.json');
         initConfigPath(configPath);
-        const settingsWithSkills = {
+        const settingsWithCommandHints = {
             ...DEFAULT_SETTINGS,
-            lines: [[{ id: 'skills-1', type: 'skills' }], [], []]
+            lines: [[{ id: 'command-hint-1', type: 'command-hint' }], [], []]
         };
-        fs.writeFileSync(configPath, JSON.stringify(settingsWithSkills, null, 2), 'utf-8');
+        fs.writeFileSync(configPath, JSON.stringify(settingsWithCommandHints, null, 2), 'utf-8');
 
         await installStatusLine(false);
 
-        const installedCommand = `${CCSTATUSLINE_COMMANDS.NPM} --config ${configPath}`;
+        const installedCommand = `${CCOMMANDHINTS_COMMANDS.NPM} --config ${configPath}`;
         const claudeSettings = await loadClaudeSettings();
         expect(claudeSettings.statusLine?.command).toBe(installedCommand);
-        const hooks = (claudeSettings.hooks ?? {}) as Record<string, unknown[]>;
-        expect(hooks.PreToolUse).toEqual([
-            {
-                _tag: 'ccstatusline-managed',
-                matcher: 'Skill',
-                hooks: [{ type: 'command', command: `${installedCommand} --hook` }]
-            }
-        ]);
-        expect(hooks.UserPromptSubmit).toEqual([
-            {
-                _tag: 'ccstatusline-managed',
-                hooks: [{ type: 'command', command: `${installedCommand} --hook` }]
-            }
-        ]);
+        expect(claudeSettings.hooks).toBeUndefined();
     });
 });
 
@@ -189,14 +176,14 @@ describe('backup and error handling behavior', () => {
         await saveClaudeSettings({
             statusLine: {
                 type: 'command',
-                command: CCSTATUSLINE_COMMANDS.NPM,
+                command: CCOMMANDHINTS_COMMANDS.NPM,
                 padding: 0
             }
         });
 
         const settingsPath = getClaudeSettingsPath();
         const saved = JSON.parse(fs.readFileSync(settingsPath, 'utf-8')) as { statusLine?: { command?: string } };
-        expect(saved.statusLine?.command).toBe(CCSTATUSLINE_COMMANDS.NPM);
+        expect(saved.statusLine?.command).toBe(CCOMMANDHINTS_COMMANDS.NPM);
         expect(fs.existsSync(`${settingsPath}.bak`)).toBe(true);
 
         const backup = JSON.parse(fs.readFileSync(`${settingsPath}.bak`, 'utf-8')) as { statusLine?: { command?: string } };
@@ -258,7 +245,7 @@ describe('backup and error handling behavior', () => {
 
             const settingsPath = getClaudeSettingsPath();
             const installed = JSON.parse(fs.readFileSync(settingsPath, 'utf-8')) as { statusLine?: { command?: string; padding?: number } };
-            expect(installed.statusLine?.command).toBe(CCSTATUSLINE_COMMANDS.NPM);
+            expect(installed.statusLine?.command).toBe(CCOMMANDHINTS_COMMANDS.NPM);
             expect(installed.statusLine?.padding).toBe(0);
             expect(fs.existsSync(`${settingsPath}.orig`)).toBe(true);
             expect(fs.readFileSync(`${settingsPath}.orig`, 'utf-8')).toBe('{ invalid json');
@@ -292,15 +279,15 @@ describe('backup and error handling behavior', () => {
         writeRawClaudeSettings(JSON.stringify({
             statusLine: {
                 type: 'command',
-                command: CCSTATUSLINE_COMMANDS.NPM,
+                command: CCOMMANDHINTS_COMMANDS.NPM,
                 padding: 0
             },
             hooks: {
                 PreToolUse: [
                     {
-                        _tag: 'ccstatusline-managed',
+                        _tag: 'cccommandhints-managed',
                         matcher: 'Skill',
-                        hooks: [{ type: 'command', command: `${CCSTATUSLINE_COMMANDS.NPM} --hook` }]
+                        hooks: [{ type: 'command', command: `${CCOMMANDHINTS_COMMANDS.NPM} --hook` }]
                     },
                     {
                         matcher: 'Other',
@@ -309,8 +296,8 @@ describe('backup and error handling behavior', () => {
                 ],
                 UserPromptSubmit: [
                     {
-                        _tag: 'ccstatusline-managed',
-                        hooks: [{ type: 'command', command: `${CCSTATUSLINE_COMMANDS.NPM} --hook` }]
+                        _tag: 'cccommandhints-managed',
+                        hooks: [{ type: 'command', command: `${CCOMMANDHINTS_COMMANDS.NPM} --hook` }]
                     }
                 ]
             }
@@ -349,7 +336,7 @@ describe('backup and error handling behavior', () => {
         await saveClaudeSettings({
             statusLine: {
                 type: 'command',
-                command: `${CCSTATUSLINE_COMMANDS.NPM} --config /tmp/settings.json`
+                command: `${CCOMMANDHINTS_COMMANDS.NPM} --config /tmp/settings.json`
             }
         });
 
