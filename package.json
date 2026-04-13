@@ -1,0 +1,66 @@
+{
+  "name": "cccommandhints",
+  "version": "1.0.0",
+  "description": "Claude Code command hints status line - Display /commands with Chinese descriptions",
+  "module": "src/ccstatusline.ts",
+  "type": "module",
+  "bin": {
+    "cccommandhints": "dist/cccommandhints.js",
+    "cch": "dist/cccommandhints.js"
+  },
+  "files": [
+    "dist/"
+  ],
+  "scripts": {
+    "start": "bun run src/ccstatusline.ts",
+    "build": "rm -rf dist/* ; bun build src/ccstatusline.ts --target=node --outfile=dist/cccommandhints.js --target-version=14",
+    "postbuild": "bun run scripts/replace-version.ts",
+    "example": "cat scripts/payload.example.json | bun start",
+    "prepublishOnly": "bun run build",
+    "lint": "bun tsc --noEmit && eslint . --config eslint.config.js --max-warnings=0",
+    "lint:fix": "bun tsc --noEmit && eslint . --config eslint.config.js --max-warnings=0 --fix"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@stylistic/eslint-plugin": "^5.2.3",
+    "@types/bun": "latest",
+    "@types/react": "^19.1.10",
+    "chalk": "^5.5.0",
+    "eslint": "^10.0.0",
+    "eslint-import-resolver-typescript": "^4.4.4",
+    "eslint-plugin-import": "^2.32.0",
+    "eslint-plugin-import-newlines": "^2.0.0",
+    "eslint-plugin-react": "^7.37.5",
+    "eslint-plugin-react-hooks": "^7.0.1",
+    "globals": "^17.3.0",
+    "ink": "6.2.0",
+    "ink-select-input": "^6.2.0",
+    "react": "^19.1.1",
+    "strip-ansi": "^7.1.0",
+    "typescript": "^5.9.2",
+    "typescript-eslint": "^8.39.1",
+    "vitest": "^4.0.18",
+    "zod": "^4.0.17"
+  },
+  "keywords": [
+    "claude",
+    "claude-code",
+    "cli",
+    "status-line",
+    "terminal",
+    "command-hints",
+    "chinese"
+  ],
+  "author": "PPDLBB",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/PPDLBB/cccommandhints.git"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "patchedDependencies": {
+    "ink@6.2.0": "patches/ink@6.2.0.patch"
+  }
+}
