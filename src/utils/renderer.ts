@@ -414,9 +414,18 @@ function renderPowerlineStatusLine(
 
     // Handle truncation if terminal width is known
     if (terminalWidth && terminalWidth > 0) {
-        const plainLength = getVisibleWidth(result);
-        if (plainLength > terminalWidth) {
-            result = truncateStyledText(result, terminalWidth, { ellipsis: true });
+        if (result.includes('\n')) {
+            result = result.split('\n').map(subLine => {
+                if (getVisibleWidth(subLine) > terminalWidth) {
+                    return truncateStyledText(subLine, terminalWidth, { ellipsis: true });
+                }
+                return subLine;
+            }).join('\n');
+        } else {
+            const plainLength = getVisibleWidth(result);
+            if (plainLength > terminalWidth) {
+                result = truncateStyledText(result, terminalWidth, { ellipsis: true });
+            }
         }
     }
 
@@ -849,11 +858,19 @@ export function renderStatusLine(
     // Use terminalWidth if available (already accounts for flex mode adjustments), otherwise use detectedWidth
     const maxWidth = terminalWidth ?? detectedWidth;
     if (maxWidth && maxWidth > 0) {
-        // Remove ANSI escape codes to get actual length
-        const plainLength = getVisibleWidth(statusLine);
-
-        if (plainLength > maxWidth) {
-            statusLine = truncateStyledText(statusLine, maxWidth, { ellipsis: true });
+        if (statusLine.includes('\n')) {
+            // Multi-line widget: truncate each physical line individually
+            statusLine = statusLine.split('\n').map(subLine => {
+                if (getVisibleWidth(subLine) > maxWidth) {
+                    return truncateStyledText(subLine, maxWidth, { ellipsis: true });
+                }
+                return subLine;
+            }).join('\n');
+        } else {
+            const plainLength = getVisibleWidth(statusLine);
+            if (plainLength > maxWidth) {
+                statusLine = truncateStyledText(statusLine, maxWidth, { ellipsis: true });
+            }
         }
     }
 

@@ -5,17 +5,12 @@ import {
 import React from 'react';
 
 import type { Settings } from '../../types/Settings';
-import { type PowerlineFontStatus } from '../../utils/powerline';
 
 import { List } from './List';
 
 export type MainMenuOption = 'lines'
     | 'colors'
-    | 'powerline'
-    | 'terminalConfig'
-    | 'globalOverrides'
     | 'install'
-    | 'starGithub'
     | 'save'
     | 'exit';
 
@@ -24,7 +19,6 @@ export interface MainMenuProps {
     isClaudeInstalled: boolean;
     hasChanges: boolean;
     initialSelection?: number;
-    powerlineFontStatus: PowerlineFontStatus;
     settings: Settings | null;
     previewIsTruncated?: boolean;
 }
@@ -34,7 +28,6 @@ export const MainMenu: React.FC<MainMenuProps> = ({
     isClaudeInstalled,
     hasChanges,
     initialSelection = 0,
-    powerlineFontStatus,
     settings,
     previewIsTruncated
 }) => {
@@ -56,24 +49,6 @@ export const MainMenu: React.FC<MainMenuProps> = ({
             description:
                 'Customize colors for each widget including foreground, background, and bold styling'
         },
-        {
-            label: '⚡ Powerline Setup',
-            value: 'powerline',
-            description:
-                'Install Powerline fonts for enhanced visual separators and symbols in your status line'
-        },
-        '-' as const,
-        {
-            label: '💻 Terminal Options',
-            value: 'terminalConfig',
-            description: 'Configure terminal-specific settings for optimal display'
-        },
-        {
-            label: '🌐 Global Overrides',
-            value: 'globalOverrides',
-            description:
-                'Set global padding, separators, and color overrides that apply to all widgets'
-        },
         '-' as const,
         {
             label: isClaudeInstalled
@@ -81,8 +56,8 @@ export const MainMenu: React.FC<MainMenuProps> = ({
                 : '📦 Install to Claude Code',
             value: 'install',
             description: isClaudeInstalled
-                ? 'Remove ccstatusline from your Claude Code settings'
-                : 'Add ccstatusline to your Claude Code settings for automatic status line rendering'
+                ? 'Remove cccommandhints from your Claude Code settings'
+                : 'Add cccommandhints to your Claude Code settings so the command hints bar appears in Claude Code'
         }
     ];
 
@@ -97,12 +72,6 @@ export const MainMenu: React.FC<MainMenuProps> = ({
                 label: '❌ Exit without saving',
                 value: 'exit',
                 description: 'Exit without saving your changes'
-            },
-            '-' as const,
-            {
-                label: '⭐ Like ccstatusline? Star us on GitHub',
-                value: 'starGithub',
-                description: 'Open the ccstatusline GitHub repository in your browser so you can star the project'
             }
         );
     } else {
@@ -111,12 +80,6 @@ export const MainMenu: React.FC<MainMenuProps> = ({
                 label: '🚪 Exit',
                 value: 'exit',
                 description: 'Exit the configuration tool'
-            },
-            '-' as const,
-            {
-                label: '⭐ Like ccstatusline? Star us on GitHub',
-                value: 'starGithub',
-                description: 'Open the ccstatusline GitHub repository in your browser so you can star the project'
             }
         );
     }
@@ -130,8 +93,8 @@ export const MainMenu: React.FC<MainMenuProps> = ({
             {showTruncationWarning && (
                 <Box marginBottom={1}>
                     <Text color='yellow'>
-                        ⚠ Some lines are truncated, see Terminal Options → Terminal Width
-                        for info
+                        ⚠ Some lines are truncated at this terminal width (flex mode uses
+                        full-minus-40)
                     </Text>
                 </Box>
             )}

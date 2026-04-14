@@ -106,13 +106,15 @@ export const StatusLinePreview: React.FC<StatusLinePreviewProps> = ({ lines, ter
                     <Text dimColor> Preview  (ctrl+s to save configuration at any time)</Text>
                 </Text>
             </Box>
-            {renderedLines.map((line, index) => (
-                <Text key={index}>
-                    {'  '}
-                    {line}
-                    {chalk.reset('')}
-                </Text>
-            ))}
+            {renderedLines.flatMap((line, index) =>
+                line.split('\n').map((subLine, subIndex) => (
+                    <Text key={`${index}-${subIndex}`}>
+                        {'  '}
+                        {subLine}
+                        {chalk.reset('')}
+                    </Text>
+                ))
+            )}
         </Box>
     );
 };

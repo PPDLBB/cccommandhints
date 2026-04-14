@@ -6,121 +6,162 @@ import {
     type WidgetEditorDisplay,
     type WidgetItem
 } from '../types/Widget';
-import { COMMAND_GROUPS } from './command-hint/data';
+import { getVisibleWidth, truncateStyledText } from '../utils/ansi';
+import { getCommandGroups } from './command-hint/discovery';
 import { scrollManager } from './command-hint/scroll-manager';
 
 export class CommandHintWidget implements Widget {
     getDefaultColor(): string { return 'cyan'; }
-    getDescription(): string { return 'Display Claude Code commands with Chinese descriptions. Wide screen: 3 columns, Narrow screen: rotating single column'; }
+    getDescription(): string { return 'Display Claude Code commands with Chinese descriptions. Each group occupies one line, up to 4 lines'; }
     getDisplayName(): string { return 'Command Hints'; }
     getCategory(): string { return 'Help'; }
 
     getEditorDisplay(item: WidgetItem): WidgetEditorDisplay {
-        const mode = item.metadata?.['mode'] ?? 'auto';
         const scroll = item.metadata?.['scroll'] === 'true' ? 'scroll' : 'static';
         return {
-            displayText: `${this.getDisplayName()} (${mode}, ${scroll})`
+            displayText: `${this.getDisplayName()} (multi-line, ${scroll})`
         };
     }
 
     render(item: WidgetItem, context: RenderContext, settings: Settings): string | null {
+        const commandGroups = getCommandGroups();
         const terminalWidth = context.terminalWidth ?? 100;
         const isPreview = context.isPreview ?? false;
         const rawValue = item.rawValue ?? false;
-        const mode = (item.metadata?.['mode'] as 'auto' | 'horizontal' | 'vertical') ?? 'auto';
         const enableScroll = item.metadata?.['scroll'] !== 'false';
 
         if (isPreview) {
             if (rawValue) {
-                return '/clear 清除对话 | /cost 查看费用 | /config 查看配置';
+                return '对话控制: /clear 清除对话 · /restart 重启\n信息查看: /cost 查看费用 · /usage 查看用量\n配置工具: /config 查看配置 · /api API设置\n开发协作: /plan 计划模式 · /agent 执行模式';
             }
-            return '\uD83D\uDCA1 /clear 清除对话 | /cost 查看费用 | /config 查看配置';
+            return '\uD83D\uDCA1 对话控制: /clear 清除对话 · /restart 重启\n\uD83D\uDCA1 信息查看: /cost 查看费用 · /usage 查看用量\n\uD83D\uDCA1 配置工具: /config 查看配置 · /api API设置\n\uD83D\uDCA1 开发协作: /plan 计划模式 · /agent 执行模式';
         }
 
-        const useHorizontal = mode === 'horizontal' || (mode === 'auto' && terminalWidth >= 100);
-
-        if (useHorizontal) {
-            return this.renderHorizontal(terminalWidth, rawValue, enableScroll, item.id);
-        } else {
-            return this.renderVertical(terminalWidth, rawValue, enableScroll, item.id);
-        }
+        return this.renderMultiLine(commandGroups, terminalWidth, rawValue, enableScroll, item.id);
     }
 
-    private renderHorizontal(width: number, rawValue: boolean, enableScroll: boolean, itemId: string): string {
-        const separator = rawValue ? ' | ' : ' \u2502 ';
-        const separatorWidth = separator.length;
+    private renderMultiLine(
+        commandGroups: Array<{ name: string; commands: Array<{ cmd: string; desc: string }> }>,
+        width: number,
+        rawValue: boolean,
+        enableScroll: boolean,
+        itemId: string
+    ): string {
         const prefix = rawValue ? '' : '\uD83D\uDCA1 ';
-        const prefixWidth = rawValue ? 0 : 2;
+        const prefixWidth = getVisibleWidth(prefix);
+        const availableWidth = Math.max(30, width - prefixWidth - 2);
+        const cycleBase = Math.floor(Date.now() / 5000);
 
-        const availableWidth = Math.max(20, width - prefixWidth - (separatorWidth * 2) - 2);
-        const groupWidth = Math.floor(availableWidth / 3);
+        const lines: string[] = [];
 
-        const parts: string[] = [];
-
-        COMMAND_GROUPS.forEach((group, index) => {
-            const key = `${itemId}-h-${index}`;
-            const content = this.formatGroupContent(group, groupWidth, enableScroll, key, rawValue);
-            parts.push(content);
+        commandGroups.forEach((group, index) => {
+            const commandCount = group.commands.length;
+            const startIndex = commandCount > 0 ? (cycleBase + index) % commandCount : 0;
+            const rotatedCommands = this.rotateCommands(group.commands, Math.max(16, availableWidth - 14), rawValue, startIndex);
+            const pageText = `${group.name}: ${this.buildCommandText(rotatedCommands, rawValue)}`;
+            const key = `${itemId}-ml-${index}-${startIndex}`;
+            const content = this.formatGroupContent(pageText, availableWidth, enableScroll, key, rawValue);
+            lines.push(prefix + content);
         });
 
-        return prefix + parts.join(separator);
+        return lines.join('\n');
     }
 
-    private renderVertical(width: number, rawValue: boolean, enableScroll: boolean, itemId: string): string {
-        const prefix = rawValue ? '' : '\uD83D\uDCA1 ';
-        const prefixWidth = rawValue ? 0 : 2;
-        const availableWidth = Math.max(30, width - prefixWidth - 2);
+    private buildCommandText(commands: Array<{ cmd: string; desc: string }>, rawValue: boolean): string {
+        const delimiter = rawValue ? ', ' : ' · ';
+        return commands.map(cmd => `${cmd.cmd} ${cmd.desc}`).join(delimiter);
+    }
 
-        const cycleIndex = Math.floor(Date.now() / 5000) % COMMAND_GROUPS.length;
-        const group = COMMAND_GROUPS[cycleIndex]!;
-        const key = `${itemId}-v-${cycleIndex}`;
+    private rotateCommands(
+        commands: Array<{ cmd: string; desc: string }>,
+        targetWidth: number,
+        rawValue: boolean,
+        startIndex: number
+    ): Array<{ cmd: string; desc: string }> {
+        if (commands.length === 0) {
+            return [];
+        }
 
-        const content = this.formatGroupContent(group, availableWidth, enableScroll, key, rawValue);
-        const indicator = `${'\u25CF'.repeat(cycleIndex + 1)}${'\u25CB'.repeat(3 - cycleIndex - 1)}`;
+        const delimiter = rawValue ? ', ' : ' · ';
+        const delimiterWidth = getVisibleWidth(delimiter);
+        const result: Array<{ cmd: string; desc: string }> = [];
+        let currentWidth = 0;
 
-        return `${prefix}[${indicator}] ${content}`;
+        for (let i = 0; i < commands.length; i++) {
+            const cmdIndex = (startIndex + i) % commands.length;
+            const command = commands[cmdIndex]!;
+            const text = `${command.cmd} ${command.desc}`;
+            const textWidth = getVisibleWidth(text);
+            const addedWidth = result.length === 0 ? textWidth : delimiterWidth + textWidth;
+
+            if (result.length > 0 && currentWidth + addedWidth > targetWidth) {
+                break;
+            }
+
+            result.push(command);
+            currentWidth += addedWidth;
+        }
+
+        return result;
+    }
+
+    private sliceByDisplayWidth(text: string, startOffset: number, maxWidth: number): string {
+        let result = '';
+        let currentWidth = 0;
+        let index = 0;
+
+        while (index < text.length) {
+            const codePoint = text.codePointAt(index);
+            if (codePoint === undefined) break;
+            const char = String.fromCodePoint(codePoint);
+            const charWidth = getVisibleWidth(char);
+
+            if (currentWidth >= startOffset) {
+                if (getVisibleWidth(result) + charWidth > maxWidth) {
+                    break;
+                }
+                result += char;
+            }
+
+            currentWidth += charWidth;
+            index += char.length;
+        }
+
+        return result;
     }
 
     private formatGroupContent(
-        group: { commands: Array<{ cmd: string; desc: string }> },
+        fullText: string,
         maxWidth: number,
         enableScroll: boolean,
         scrollKey: string,
         rawValue: boolean
     ): string {
-        const delimiter = rawValue ? ', ' : ' · ';
-        const parts = group.commands.map(cmd => `${cmd.cmd} ${cmd.desc}`);
-        const fullText = parts.join(delimiter);
+        const textWidth = getVisibleWidth(fullText);
 
-        if (!enableScroll || fullText.length <= maxWidth) {
-            if (fullText.length < maxWidth) {
-                return fullText.padEnd(maxWidth, ' ');
+        if (!enableScroll || textWidth <= maxWidth) {
+            if (textWidth < maxWidth) {
+                return fullText + ' '.repeat(maxWidth - textWidth);
             }
-            return fullText.substring(0, maxWidth - 1) + (rawValue ? '...' : '…');
+            return truncateStyledText(fullText, maxWidth, { ellipsis: !rawValue });
         }
 
-        const offset = scrollManager.getOffset(scrollKey, fullText.length, maxWidth);
-        const visibleText = fullText.substring(offset, offset + maxWidth);
-        return visibleText.padEnd(maxWidth, ' ');
+        const offset = scrollManager.getOffset(scrollKey, textWidth, maxWidth);
+        const visibleText = this.sliceByDisplayWidth(fullText, offset, maxWidth);
+        const visibleWidth = getVisibleWidth(visibleText);
+        if (visibleWidth < maxWidth) {
+            return visibleText + ' '.repeat(maxWidth - visibleWidth);
+        }
+        return visibleText;
     }
 
     getCustomKeybinds(): CustomKeybind[] {
         return [
-            { key: 'm', label: '(m)ode toggle', action: 'toggle-mode' },
             { key: 's', label: '(s)croll toggle', action: 'toggle-scroll' }
         ];
     }
 
     handleEditorAction(action: string, item: WidgetItem): WidgetItem | null {
-        if (action === 'toggle-mode') {
-            const currentMode = (item.metadata?.['mode'] as 'auto' | 'horizontal' | 'vertical') ?? 'auto';
-            const modes: Array<'auto' | 'horizontal' | 'vertical'> = ['auto', 'horizontal', 'vertical'];
-            const nextMode = modes[(modes.indexOf(currentMode) + 1) % modes.length]!;
-            return {
-                ...item,
-                metadata: { ...item.metadata, mode: nextMode }
-            };
-        }
         if (action === 'toggle-scroll') {
             const currentScroll = item.metadata?.['scroll'] ?? 'true';
             return {

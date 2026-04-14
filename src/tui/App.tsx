@@ -31,31 +31,18 @@ import {
     loadSettings,
     saveSettings
 } from '../utils/config';
-import { openExternalUrl } from '../utils/open-url';
-import {
-    checkPowerlineFonts,
-    checkPowerlineFontsAsync,
-    installPowerlineFonts,
-    type PowerlineFontStatus
-} from '../utils/powerline';
 import { getPackageVersion } from '../utils/terminal';
 
 import {
     ColorMenu,
     ConfirmDialog,
-    GlobalOverridesMenu,
     InstallMenu,
     ItemsEditor,
     LineSelector,
     MainMenu,
-    PowerlineSetup,
     StatusLinePreview,
-    TerminalOptionsMenu,
-    TerminalWidthMenu,
     type MainMenuOption
 } from './components';
-
-const GITHUB_REPO_URL = 'https://github.com/PPDLBB/cccommandhints';
 
 interface FlashMessage {
     text: string;
@@ -67,11 +54,7 @@ type AppScreen = 'main'
     | 'items'
     | 'colorLines'
     | 'colors'
-    | 'terminalWidth'
-    | 'terminalConfig'
-    | 'globalOverrides'
     | 'confirm'
-    | 'powerline'
     | 'install';
 
 interface ConfirmDialogState {
@@ -105,9 +88,6 @@ export const App: React.FC = () => {
     const [confirmDialog, setConfirmDialog] = useState<ConfirmDialogState | null>(null);
     const [isClaudeInstalled, setIsClaudeInstalled] = useState(false);
     const [terminalWidth, setTerminalWidth] = useState(process.stdout.columns || 80);
-    const [powerlineFontStatus, setPowerlineFontStatus] = useState<PowerlineFontStatus>({ installed: false });
-    const [installingFonts, setInstallingFonts] = useState(false);
-    const [fontInstallMessage, setFontInstallMessage] = useState<string | null>(null);
     const [existingStatusLine, setExistingStatusLine] = useState<string | null>(null);
     const [flashMessage, setFlashMessage] = useState<FlashMessage | null>(null);
     const [previewIsTruncated, setPreviewIsTruncated] = useState(false);
@@ -123,15 +103,6 @@ export const App: React.FC = () => {
             setOriginalSettings(cloneSettings(loadedSettings));
         });
         void isInstalled().then(setIsClaudeInstalled);
-
-        // Check for Powerline fonts on startup (use sync version that doesn't call execSync)
-        const fontStatus = checkPowerlineFonts();
-        setPowerlineFontStatus(fontStatus);
-
-        // Optionally do the async check later (but not blocking React)
-        void checkPowerlineFontsAsync().then((asyncStatus) => {
-            setPowerlineFontStatus(asyncStatus);
-        });
 
         const handleResize = () => {
             setTerminalWidth(process.stdout.columns || 80);
@@ -254,40 +225,8 @@ export const App: React.FC = () => {
             case 'colors':
                 setScreen('colorLines');
                 break;
-            case 'terminalConfig':
-                setScreen('terminalConfig');
-                break;
-            case 'globalOverrides':
-                setScreen('globalOverrides');
-                break;
-            case 'powerline':
-                setScreen('powerline');
-                break;
             case 'install':
                 handleInstallUninstall();
-                break;
-            case 'starGithub':
-                setConfirmDialog({
-                    message: `Open the cccommandhints GitHub repository in your browser?\n\n${GITHUB_REPO_URL}`,
-                    action: () => {
-                        const result = openExternalUrl(GITHUB_REPO_URL);
-                        if (result.success) {
-                            setFlashMessage({
-                                text: '✓ Opened GitHub repository in browser',
-                                color: 'green'
-                            });
-                        } else {
-                            setFlashMessage({
-                                text: `✗ Could not open browser. Visit: ${GITHUB_REPO_URL}`,
-                                color: 'red'
-                            });
-                        }
-                        setScreen('main');
-                        setConfirmDialog(null);
-                        return Promise.resolve();
-                    }
-                });
-                setScreen('confirm');
                 break;
             case 'save':
                 await saveSettings(settings);
@@ -358,7 +297,6 @@ export const App: React.FC = () => {
                         isClaudeInstalled={isClaudeInstalled}
                         hasChanges={hasChanges}
                         initialSelection={menuSelections.main}
-                        powerlineFontStatus={powerlineFontStatus}
                         settings={settings}
                         previewIsTruncated={previewIsTruncated}
                     />
@@ -433,47 +371,6 @@ export const App: React.FC = () => {
                         }}
                     />
                 )}
-                {screen === 'terminalConfig' && (
-                    <TerminalOptionsMenu
-                        settings={settings}
-                        onUpdate={(updatedSettings) => {
-                            setSettings(updatedSettings);
-                        }}
-                        onBack={(target?: string) => {
-                            if (target === 'width') {
-                                setScreen('terminalWidth');
-                            } else {
-                                // Save that we came from 'terminalConfig' menu (index 3)
-                                setMenuSelections(prev => ({ ...prev, main: 3 }));
-                                setScreen('main');
-                            }
-                        }}
-                    />
-                )}
-                {screen === 'terminalWidth' && (
-                    <TerminalWidthMenu
-                        settings={settings}
-                        onUpdate={(updatedSettings) => {
-                            setSettings(updatedSettings);
-                        }}
-                        onBack={() => {
-                            setScreen('terminalConfig');
-                        }}
-                    />
-                )}
-                {screen === 'globalOverrides' && (
-                    <GlobalOverridesMenu
-                        settings={settings}
-                        onUpdate={(updatedSettings) => {
-                            setSettings(updatedSettings);
-                        }}
-                        onBack={() => {
-                            // Save that we came from 'globalOverrides' menu (index 4)
-                            setMenuSelections(prev => ({ ...prev, main: 4 }));
-                            setScreen('main');
-                        }}
-                    />
-                )}
                 {screen === 'confirm' && confirmDialog && (
                     <ConfirmDialog
                         message={confirmDialog.message}
@@ -492,36 +389,6 @@ export const App: React.FC = () => {
                         onSelectBunx={handleBunxInstall}
                         onCancel={handleInstallMenuCancel}
                         initialSelection={menuSelections.install}
-                    />
-                )}
-                {screen === 'powerline' && (
-                    <PowerlineSetup
-                        settings={settings}
-                        powerlineFontStatus={powerlineFontStatus}
-                        onUpdate={(updatedSettings) => {
-                            setSettings(updatedSettings);
-                        }}
-                        onBack={() => {
-                            setScreen('main');
-                        }}
-                        onInstallFonts={() => {
-                            setInstallingFonts(true);
-                            // Add a small delay to allow React to render the "Installing..." message
-                            // before the blocking execSync calls in installPowerlineFonts
-                            setTimeout(() => {
-                                void installPowerlineFonts().then((result) => {
-                                    setInstallingFonts(false);
-                                    setFontInstallMessage(result.message);
-                                    // Refresh font status
-                                    void checkPowerlineFontsAsync().then((asyncStatus) => {
-                                        setPowerlineFontStatus(asyncStatus);
-                                    });
-                                });
-                            }, 50);
-                        }}
-                        installingFonts={installingFonts}
-                        fontInstallMessage={fontInstallMessage}
-                        onClearMessage={() => { setFontInstallMessage(null); }}
                     />
                 )}
             </Box>
