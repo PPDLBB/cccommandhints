@@ -4,7 +4,7 @@ import * as os from 'os';
 import * as path from 'path';
 import { promisify } from 'util';
 
-import { DEFAULT_COMMAND_GROUPS } from './data';
+import { COMMAND_DESCRIPTIONS, DEFAULT_COMMAND_GROUPS, inferCommandDesc } from './data';
 import type {
     CommandGroup,
     CommandHint
@@ -165,7 +165,8 @@ function buildGroups(commands: string[]): CommandGroup[] {
         const { group, color } = classifyCommand(command);
         const current = grouped.get(group);
         if (current) {
-            current.commands.push({ cmd: command, desc: '命令提示' });
+            const desc = COMMAND_DESCRIPTIONS[command] ?? inferCommandDesc(command);
+            current.commands.push({ cmd: command, desc });
             if (color) current.color = color;
         }
     }

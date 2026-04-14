@@ -1,6 +1,6 @@
 export class ScrollStateManager {
     private positions: Map<string, number> = new Map();
-    private lastUpdate: number = Date.now();
+    private lastUpdates: Map<string, number> = new Map();
     private readonly scrollInterval: number;
 
     constructor(scrollInterval = 300) {
@@ -13,19 +13,23 @@ export class ScrollStateManager {
         }
 
         const now = Date.now();
-        const elapsed = now - this.lastUpdate;
+
+        if (!this.positions.has(key)) {
+            this.positions.set(key, 0);
+            this.lastUpdates.set(key, now);
+        }
+
+        const lastUpdate = this.lastUpdates.get(key) ?? now;
+        const elapsed = now - lastUpdate;
+
         if (elapsed >= this.scrollInterval) {
-            this.positions.forEach((pos, mapKey) => {
-                const cycleLength = textLength + visibleWidth + 5;
-                this.positions.set(mapKey, (pos + 1) % cycleLength);
-            });
-            this.lastUpdate = now;
+            const pos = this.positions.get(key) ?? 0;
+            const cycleLength = textLength + visibleWidth + 5;
+            this.positions.set(key, (pos + 1) % cycleLength);
+            this.lastUpdates.set(key, now);
         }
 
         const currentPos = this.positions.get(key) ?? 0;
-        if (!this.positions.has(key)) {
-            this.positions.set(key, 0);
-        }
 
         if (currentPos < visibleWidth) {
             return 0;
@@ -39,7 +43,7 @@ export class ScrollStateManager {
 
     reset(): void {
         this.positions.clear();
-        this.lastUpdate = Date.now();
+        this.lastUpdates.clear();
     }
 }
 
