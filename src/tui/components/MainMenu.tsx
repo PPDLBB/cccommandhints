@@ -8,8 +8,7 @@ import type { Settings } from '../../types/Settings';
 
 import { List } from './List';
 
-export type MainMenuOption = 'lines'
-    | 'colors'
+export type MainMenuOption = 'colors'
     | 'install'
     | 'save'
     | 'exit';
@@ -38,16 +37,10 @@ export const MainMenu: React.FC<MainMenuProps> = ({
         description: string;
     } | '-')[] = [
         {
-            label: '📝 Edit Lines',
-            value: 'lines',
-            description:
-                'Configure any number of status lines with various widgets like model info, git status, and token usage'
-        },
-        {
             label: '🎨 Edit Colors',
             value: 'colors',
             description:
-                'Customize colors for each widget including foreground, background, and bold styling'
+                'Customize foreground colors for widgets on each line'
         },
         '-' as const,
         {

@@ -37,7 +37,6 @@ import {
     ColorMenu,
     ConfirmDialog,
     InstallMenu,
-    ItemsEditor,
     LineSelector,
     MainMenu,
     StatusLinePreview,
@@ -50,8 +49,6 @@ interface FlashMessage {
 }
 
 type AppScreen = 'main'
-    | 'lines'
-    | 'items'
     | 'colorLines'
     | 'colors'
     | 'confirm'
@@ -219,9 +216,6 @@ export const App: React.FC = () => {
 
     const handleMainMenuSelect = async (value: MainMenuOption) => {
         switch (value) {
-            case 'lines':
-                setScreen('lines');
-                break;
             case 'colors':
                 setScreen('colorLines');
                 break;
@@ -240,19 +234,8 @@ export const App: React.FC = () => {
         }
     };
 
-    const updateLine = (lineIndex: number, widgets: WidgetItem[]) => {
-        const newLines = [...settings.lines];
-        newLines[lineIndex] = widgets;
-        setSettings({ ...settings, lines: newLines });
-    };
-
     const updateLines = (newLines: WidgetItem[][]) => {
         setSettings({ ...settings, lines: newLines });
-    };
-
-    const handleLineSelect = (lineIndex: number) => {
-        setSelectedLine(lineIndex);
-        setScreen('items');
     };
 
     return (
@@ -301,38 +284,6 @@ export const App: React.FC = () => {
                         previewIsTruncated={previewIsTruncated}
                     />
                 )}
-                {screen === 'lines' && (
-                    <LineSelector
-                        lines={settings.lines}
-                        onSelect={(line) => {
-                            setMenuSelections(prev => ({ ...prev, lines: line }));
-                            handleLineSelect(line);
-                        }}
-                        onLinesUpdate={updateLines}
-                        onBack={() => {
-                            // Save that we came from 'lines' menu (index 0)
-                            // Clear the line selection so it resets next time we enter
-                            setMenuSelections(prev => ({ ...prev, main: 0 }));
-                            setScreen('main');
-                        }}
-                        initialSelection={menuSelections.lines}
-                        title='Select Line to Edit Items'
-                        allowEditing={true}
-                    />
-                )}
-                {screen === 'items' && (
-                    <ItemsEditor
-                        widgets={settings.lines[selectedLine] ?? []}
-                        onUpdate={(widgets) => { updateLine(selectedLine, widgets); }}
-                        onBack={() => {
-                            // When going back to lines menu, preserve which line was selected
-                            setMenuSelections(prev => ({ ...prev, lines: selectedLine }));
-                            setScreen('lines');
-                        }}
-                        lineNumber={selectedLine + 1}
-                        settings={settings}
-                    />
-                )}
                 {screen === 'colorLines' && (
                     <LineSelector
                         lines={settings.lines}
@@ -343,8 +294,8 @@ export const App: React.FC = () => {
                             setScreen('colors');
                         }}
                         onBack={() => {
-                            // Save that we came from 'colors' menu (index 1)
-                            setMenuSelections(prev => ({ ...prev, main: 1 }));
+                            // Save that we came from 'colors' menu (index 0)
+                            setMenuSelections(prev => ({ ...prev, main: 0 }));
                             setScreen('main');
                         }}
                         initialSelection={menuSelections.lines}

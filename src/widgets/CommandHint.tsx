@@ -31,6 +31,8 @@ export class CommandHintWidget implements Widget {
         const isPreview = context.isPreview ?? false;
         const rawValue = item.rawValue ?? false;
         const enableScroll = item.metadata?.scroll !== 'false';
+        const scrollInterval = settings.scrollInterval;
+        const rotationInterval = settings.rotationInterval;
 
         if (isPreview) {
             if (rawValue) {
@@ -39,7 +41,9 @@ export class CommandHintWidget implements Widget {
             return '\uD83D\uDCA1 对话控制: /clear 清除对话 · /restart 重启\n\uD83D\uDCA1 信息查看: /cost 查看费用 · /usage 查看用量\n\uD83D\uDCA1 配置工具: /config 查看配置 · /api API设置\n\uD83D\uDCA1 开发协作: /plan 计划模式 · /agent 执行模式';
         }
 
-        return this.renderMultiLine(commandGroups, terminalWidth, rawValue, enableScroll, item.id);
+        scrollManager.setScrollInterval(scrollInterval);
+
+        return this.renderMultiLine(commandGroups, terminalWidth, rawValue, enableScroll, item.id, rotationInterval);
     }
 
     private renderMultiLine(
@@ -47,12 +51,13 @@ export class CommandHintWidget implements Widget {
         width: number,
         rawValue: boolean,
         enableScroll: boolean,
-        itemId: string
+        itemId: string,
+        rotationInterval: number
     ): string {
         const prefix = rawValue ? '' : '\uD83D\uDCA1 ';
         const prefixWidth = getVisibleWidth(prefix);
         const availableWidth = Math.max(30, width - prefixWidth - 2);
-        const cycleBase = Math.floor(Date.now() / 5000);
+        const cycleBase = Math.floor(Date.now() / rotationInterval);
 
         const lines: string[] = [];
 

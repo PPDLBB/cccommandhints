@@ -44,6 +44,8 @@ export const SettingsSchema = z.object({
     overrideForegroundColor: z.string().optional(),
     globalBold: z.boolean().default(false),
     minimalistMode: z.boolean().default(false),
+    scrollInterval: z.number().min(50).max(5000).default(300),
+    rotationInterval: z.number().min(1000).max(60000).default(5000),
     powerline: PowerlineConfigSchema.default({
         enabled: false,
         separators: ['\uE0B0'],

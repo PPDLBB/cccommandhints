@@ -1,9 +1,13 @@
 export class ScrollStateManager {
     private positions = new Map<string, number>();
     private lastUpdates = new Map<string, number>();
-    private readonly scrollInterval: number;
+    private scrollInterval: number;
 
     constructor(scrollInterval = 300) {
+        this.scrollInterval = scrollInterval;
+    }
+
+    setScrollInterval(scrollInterval: number): void {
         this.scrollInterval = scrollInterval;
     }
 
