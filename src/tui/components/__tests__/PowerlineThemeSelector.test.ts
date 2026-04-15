@@ -74,6 +74,15 @@ describe('PowerlineThemeSelector helpers', () => {
         const settings = {
             ...DEFAULT_SETTINGS,
             colorLevel: 2 as const,
+            lines: [
+                [
+                    { id: '1', type: 'command-hint' },
+                    { id: '2', type: 'separator', character: '|' },
+                    { id: '3', type: 'command-hint' }
+                ],
+                [],
+                []
+            ] as typeof DEFAULT_SETTINGS.lines,
             powerline: {
                 ...DEFAULT_SETTINGS.powerline,
                 theme: 'gruvbox'

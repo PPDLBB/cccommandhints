@@ -13,7 +13,6 @@ import type { WidgetItem } from '../../types/Widget';
 import { getVisibleWidth } from '../ansi';
 import {
     calculateMaxWidthsFromPreRendered,
-    preRenderAllWidgets,
     renderStatusLine
 } from '../renderer';
 
@@ -40,9 +39,13 @@ function renderLine(
         ...contextOverrides
     };
 
-    const preRenderedLines = preRenderAllWidgets([widgets], settings, context);
-    const preCalculatedMaxWidths = calculateMaxWidthsFromPreRendered(preRenderedLines, settings);
-    const preRenderedWidgets = preRenderedLines[0] ?? [];
+    const preRenderedWidgets = widgets.map(widget => ({
+        content: widget.type === 'custom-text' ? (widget.customText ?? '') : '',
+        plainLength: widget.type === 'custom-text' ? getVisibleWidth(widget.customText ?? '') : 0,
+        widget
+    }));
+
+    const preCalculatedMaxWidths = calculateMaxWidthsFromPreRendered([preRenderedWidgets], settings);
 
     return renderStatusLine(widgets, settings, context, preRenderedWidgets, preCalculatedMaxWidths);
 }

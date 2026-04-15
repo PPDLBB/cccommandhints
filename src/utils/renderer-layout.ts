@@ -20,6 +20,9 @@ export function resolveEffectiveTerminalWidth(
         return detectedWidth - 40;
     }
     if (flexMode === 'full-until-compact') {
+        if (context.isPreview) {
+            return detectedWidth;
+        }
         const threshold = settings.compactThreshold;
         const contextPercentage = calculateContextPercentage(context);
         return contextPercentage >= threshold ? detectedWidth - 40 : detectedWidth - 6;

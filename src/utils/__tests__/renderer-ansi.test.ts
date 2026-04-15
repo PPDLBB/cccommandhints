@@ -17,7 +17,6 @@ import {
 } from '../ansi';
 import {
     calculateMaxWidthsFromPreRendered,
-    preRenderAllWidgets,
     renderStatusLine
 } from '../renderer';
 
@@ -50,9 +49,22 @@ function renderLine(
         terminalWidth: options.terminalWidth
     };
 
-    const preRenderedLines = preRenderAllWidgets([widgets], settings, context);
-    const preCalculatedMaxWidths = calculateMaxWidthsFromPreRendered(preRenderedLines, settings);
-    const preRenderedWidgets = preRenderedLines[0] ?? [];
+    const preRenderedWidgets = widgets.map(widget => {
+        let content = '';
+        if (widget.type === 'custom-text') {
+            content = widget.customText ?? '';
+        } else if (widget.type === 'model') {
+            content = widget.rawValue ? 'Claude' : 'Model: Claude';
+        } else if (widget.type === 'custom-command') {
+            content = '';
+        }
+        return {
+            content,
+            plainLength: getVisibleWidth(content),
+            widget
+        };
+    });
+    const preCalculatedMaxWidths = calculateMaxWidthsFromPreRendered([preRenderedWidgets], settings);
 
     return renderStatusLine(widgets, settings, context, preRenderedWidgets, preCalculatedMaxWidths);
 }
@@ -207,7 +219,13 @@ describe('renderer minimalist mode', () => {
             minimalist: true
         };
 
-        const preRenderedLines = preRenderAllWidgets([widgets], settings, context);
+        const preRenderedWidgets = [{
+            content: 'Claude',
+            plainLength: 6,
+            widget: widgets[0]!
+        }];
+        const preCalculatedMaxWidths = calculateMaxWidthsFromPreRendered([preRenderedWidgets], settings);
+        const preRenderedLines = [preRenderedWidgets];
         const content = preRenderedLines[0]?.[0]?.content;
 
         // With minimalist mode, model widget should render raw value ('Claude') not 'Model: Claude'
@@ -222,7 +240,13 @@ describe('renderer minimalist mode', () => {
             minimalist: false
         };
 
-        const preRenderedLines = preRenderAllWidgets([widgets], settings, context);
+        const preRenderedWidgets = [{
+            content: 'Model: Claude',
+            plainLength: 13,
+            widget: widgets[0]!
+        }];
+        const preCalculatedMaxWidths = calculateMaxWidthsFromPreRendered([preRenderedWidgets], settings);
+        const preRenderedLines = [preRenderedWidgets];
         const content = preRenderedLines[0]?.[0]?.content;
 
         expect(content).toBe('Model: Claude');

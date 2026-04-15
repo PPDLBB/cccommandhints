@@ -206,7 +206,7 @@ describe('items-editor input handlers', () => {
 
     it('toggles raw value in normal mode for supported widgets', () => {
         const widgets: WidgetItem[] = [
-            { id: '1', type: 'tokens-input' }
+            { id: '1', type: 'command-hint' }
         ];
         const onUpdate = vi.fn();
 
@@ -258,12 +258,12 @@ describe('items-editor input handlers', () => {
 
     it('applies custom widget keybind actions in normal mode', () => {
         const widgets: WidgetItem[] = [
-            { id: '1', type: 'session-usage' }
+            { id: '1', type: 'command-hint' }
         ];
         const onUpdate = vi.fn();
 
         handleNormalInputMode({
-            input: 'p',
+            input: 's',
             key: {},
             widgets,
             selectedIndex: 0,
@@ -279,17 +279,17 @@ describe('items-editor input handlers', () => {
         });
 
         const updated = onUpdate.mock.calls[0]?.[0] as WidgetItem[] | undefined;
-        expect(updated?.[0]?.metadata?.display).toBe('progress');
+        expect(updated?.[0]?.metadata?.scroll).toBe('false');
     });
 
-    it('uses v to cycle skills widget mode', () => {
+    it('uses s to toggle command-hint scroll', () => {
         const widgets: WidgetItem[] = [
-            { id: '1', type: 'skills' }
+            { id: '1', type: 'command-hint', metadata: { scroll: 'true' } }
         ];
         const onUpdate = vi.fn();
 
         handleNormalInputMode({
-            input: 'v',
+            input: 's',
             key: {},
             widgets,
             selectedIndex: 0,
@@ -305,37 +305,6 @@ describe('items-editor input handlers', () => {
         });
 
         const updated = onUpdate.mock.calls[0]?.[0] as WidgetItem[] | undefined;
-        expect(updated?.[0]?.metadata?.mode).toBe('count');
-    });
-
-    it('opens custom editor for skills list limit action', () => {
-        const widgets: WidgetItem[] = [
-            { id: '1', type: 'skills', metadata: { mode: 'list' } }
-        ];
-        const onUpdate = vi.fn();
-        const setCustomEditorWidget = vi.fn();
-
-        handleNormalInputMode({
-            input: 'l',
-            key: {},
-            widgets,
-            selectedIndex: 0,
-            separatorChars: ['|', '-'],
-            onBack: vi.fn(),
-            onUpdate,
-            setSelectedIndex: vi.fn(),
-            setMoveMode: vi.fn(),
-            setShowClearConfirm: vi.fn(),
-            openWidgetPicker: vi.fn(),
-            getCustomKeybindsForWidget: (widgetImpl, widget) => widgetImpl.getCustomKeybinds ? widgetImpl.getCustomKeybinds(widget) : [],
-            setCustomEditorWidget
-        });
-
-        expect(onUpdate).not.toHaveBeenCalled();
-        const customEditorState = setCustomEditorWidget.mock.calls[0]?.[0] as
-            | { action?: string; widget?: WidgetItem }
-            | undefined;
-        expect(customEditorState?.action).toBe('edit-list-limit');
-        expect(customEditorState?.widget?.type).toBe('skills');
+        expect(updated?.[0]?.metadata?.scroll).toBe('false');
     });
 });

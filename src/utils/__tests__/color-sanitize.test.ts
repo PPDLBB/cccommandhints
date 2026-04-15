@@ -14,21 +14,21 @@ describe('color sanitize helpers', () => {
     it('detects custom ansi256/hex colors in foreground and background', () => {
         const lines: WidgetItem[][] = [
             [
-                { id: '1', type: 'model', color: 'ansi256:120' }
+                { id: '1', type: 'command-hint', color: 'ansi256:120' }
             ],
             [
-                { id: '2', type: 'context-length', backgroundColor: 'hex:AA00BB' }
+                { id: '2', type: 'command-hint', backgroundColor: 'hex:AA00BB' }
             ]
         ];
 
         expect(hasCustomWidgetColors(lines)).toBe(true);
-        expect(hasCustomWidgetColors([[{ id: '3', type: 'model', color: 'cyan' }]])).toBe(false);
+        expect(hasCustomWidgetColors([[{ id: '3', type: 'command-hint', color: 'cyan' }]])).toBe(false);
     });
 
     it('sanitizes hex colors when moving to ansi256 mode', () => {
         const lines: WidgetItem[][] = [[
-            { id: '1', type: 'model', color: 'hex:FF00AA', backgroundColor: 'hex:112233' },
-            { id: '2', type: 'context-length', color: 'ansi256:111', backgroundColor: 'ansi256:24' }
+            { id: '1', type: 'command-hint', color: 'hex:FF00AA', backgroundColor: 'hex:112233' },
+            { id: '2', type: 'command-hint', color: 'ansi256:111', backgroundColor: 'ansi256:24' }
         ]];
 
         const sanitized = sanitizeLinesForColorLevel(lines, 2);
@@ -41,8 +41,8 @@ describe('color sanitize helpers', () => {
 
     it('sanitizes ansi256 colors when moving to truecolor mode', () => {
         const lines: WidgetItem[][] = [[
-            { id: '1', type: 'model', color: 'ansi256:120', backgroundColor: 'ansi256:244' },
-            { id: '2', type: 'context-length', color: 'hex:AA11BB', backgroundColor: 'hex:112233' }
+            { id: '1', type: 'command-hint', color: 'ansi256:120', backgroundColor: 'ansi256:244' },
+            { id: '2', type: 'command-hint', color: 'hex:AA11BB', backgroundColor: 'hex:112233' }
         ]];
 
         const sanitized = sanitizeLinesForColorLevel(lines, 3);
@@ -55,7 +55,7 @@ describe('color sanitize helpers', () => {
 
     it('sanitizes all custom colors when moving to basic/no-color modes', () => {
         const lines: WidgetItem[][] = [[
-            { id: '1', type: 'model', color: 'ansi256:99', backgroundColor: 'hex:123456' },
+            { id: '1', type: 'command-hint', color: 'ansi256:99', backgroundColor: 'hex:123456' },
             { id: '2', type: 'separator', color: 'hex:ABCDEF', backgroundColor: 'ansi256:2' }
         ]];
 

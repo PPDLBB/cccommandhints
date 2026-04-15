@@ -13,7 +13,6 @@ import type { WidgetItem } from '../../types/Widget';
 import { getColorAnsiCode } from '../colors';
 import {
     calculateMaxWidthsFromPreRendered,
-    preRenderAllWidgets,
     renderStatusLine
 } from '../renderer';
 
@@ -42,9 +41,12 @@ function renderLine(settings: Settings, globalPowerlineThemeIndex: number): stri
         lineIndex: 1,
         globalPowerlineThemeIndex
     };
-    const preRenderedLines = preRenderAllWidgets([widgets], settings, context);
-    const preCalculatedMaxWidths = calculateMaxWidthsFromPreRendered(preRenderedLines, settings);
-    const preRenderedWidgets = preRenderedLines[0] ?? [];
+    const preRenderedWidgets = [{
+        content: 'tail',
+        plainLength: 4,
+        widget: widgets[0]!
+    }];
+    const preCalculatedMaxWidths = calculateMaxWidthsFromPreRendered([preRenderedWidgets], settings);
 
     return renderStatusLine(widgets, settings, context, preRenderedWidgets, preCalculatedMaxWidths);
 }

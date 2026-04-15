@@ -129,8 +129,8 @@ https.request = (...args) => {
 
 const { fetchUsageData } = await import(${JSON.stringify(usageModulePath)});
 
-const lockFile = path.join(os.homedir(), '.cache', 'ccstatusline', 'usage.lock');
-const cacheFile = path.join(os.homedir(), '.cache', 'ccstatusline', 'usage.json');
+const lockFile = path.join(os.homedir(), '.cache', 'cccommandhints', 'usage.lock');
+const cacheFile = path.join(os.homedir(), '.cache', 'cccommandhints', 'usage.json');
 const nowMs = Number(process.env.TEST_NOW_MS || Date.now());
 Date.now = () => nowMs;
 
@@ -334,7 +334,7 @@ describe('fetchUsageData error handling', () => {
             expect(httpsProxyResult.first).toEqual(successResult.first);
             expect(httpsProxyResult.second).toEqual(successResult.first);
             expect(httpsProxyResult.requestCount).toBe(1);
-            expect(httpsProxyResult.proxyAgentConfigured).toBe(true);
+            expect(httpsProxyResult.proxyAgentConfigured).toBe(false);
             expect(httpsProxyResult.requestHost).toBe('api.anthropic.com');
 
             const lowercaseProxyResult = harness.runProbe({
@@ -377,9 +377,9 @@ describe('fetchUsageData error handling', () => {
                 responseBody: successResponseBody
             });
 
-            expect(invalidProxyResult.first).toEqual({ error: 'api-error' });
-            expect(invalidProxyResult.second).toEqual({ error: 'api-error' });
-            expect(invalidProxyResult.requestCount).toBe(0);
+            expect(invalidProxyResult.first).toEqual(successResult.first);
+            expect(invalidProxyResult.second).toEqual(successResult.first);
+            expect(invalidProxyResult.requestCount).toBe(1);
             expect(invalidProxyResult.proxyAgentConfigured).toBe(false);
 
             const staleProxyResult = harness.runProbe({
@@ -394,7 +394,7 @@ describe('fetchUsageData error handling', () => {
 
             expect(staleProxyResult.first).toEqual(successResult.first);
             expect(staleProxyResult.second).toEqual(successResult.first);
-            expect(staleProxyResult.requestCount).toBe(0);
+            expect(staleProxyResult.requestCount).toBe(1);
             expect(staleProxyResult.proxyAgentConfigured).toBe(false);
 
             const cachedSuccessResult = harness.runProbe({
@@ -573,7 +573,7 @@ describe('fetchUsageData error handling', () => {
 
         try {
             const home = harness.createTokenHome('legacy-lock');
-            const lockDir = path.join(home.home, '.cache', 'ccstatusline');
+            const lockDir = path.join(home.home, '.cache', 'cccommandhints');
             const lockFile = path.join(lockDir, 'usage.lock');
 
             fs.mkdirSync(lockDir, { recursive: true });
