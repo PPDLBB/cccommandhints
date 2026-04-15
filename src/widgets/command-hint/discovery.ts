@@ -4,7 +4,11 @@ import * as os from 'os';
 import * as path from 'path';
 import { promisify } from 'util';
 
-import { COMMAND_DESCRIPTIONS, DEFAULT_COMMAND_GROUPS, inferCommandDesc } from './data';
+import {
+COMMAND_DESCRIPTIONS,
+DEFAULT_COMMAND_GROUPS,
+inferCommandDesc
+} from './data';
 import type {
     CommandGroup,
     CommandHint
@@ -54,10 +58,14 @@ function classifyCommand(command: string): { group: string; color: string } {
     const config = ['/config', '/settings', '/api', '/mcp', '/hooks', '/theme', '/vim', '/login', '/logout'];
     const collab = ['/plan', '/agent', '/pr', '/diff', '/init', '/tasks', '/branch', '/undo', '/test', '/bug', '/release'];
 
-    if (convo.includes(command)) return { group: '对话控制', color: 'green' };
-    if (info.includes(command)) return { group: '信息查看', color: 'yellow' };
-    if (config.includes(command)) return { group: '配置工具', color: 'magenta' };
-    if (collab.includes(command)) return { group: '开发协作', color: 'cyan' };
+    if (convo.includes(command))
+return { group: '对话控制', color: 'green' };
+    if (info.includes(command))
+return { group: '信息查看', color: 'yellow' };
+    if (config.includes(command))
+return { group: '配置工具', color: 'magenta' };
+    if (collab.includes(command))
+return { group: '开发协作', color: 'cyan' };
 
     // 兜底规则：按命令名关键词分配到4类
     const lowered = command.toLowerCase();
@@ -80,7 +88,7 @@ function parseSlashCommands(rawText: string): string[] {
     const commands = new Set<string>();
     for (const match of matches) {
         const token = match[0];
-        const index = match.index ?? 0;
+        const index = match.index;
         const previousChar = index > 0 ? (rawText[index - 1] ?? ' ') : ' ';
         const nextChar = rawText[index + token.length] ?? ' ';
 
@@ -167,7 +175,8 @@ function buildGroups(commands: string[]): CommandGroup[] {
         if (current) {
             const desc = COMMAND_DESCRIPTIONS[command] ?? inferCommandDesc(command);
             current.commands.push({ cmd: command, desc });
-            if (color) current.color = color;
+            if (color)
+current.color = color;
         }
     }
 

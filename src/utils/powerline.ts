@@ -249,7 +249,7 @@ export async function installPowerlineFonts(): Promise<{ success: boolean; messa
                 const fontFiles: string[] = [];
 
                 // Find all font files in the repository
-                function findFontFiles(dir: string): void {
+                const findFontFiles = (dir: string): void => {
                     const files = fs.readdirSync(dir);
                     for (const file of files) {
                         const filePath = path.join(dir, file);
@@ -264,7 +264,7 @@ export async function installPowerlineFonts(): Promise<{ success: boolean; messa
                             }
                         }
                     }
-                }
+                };
 
                 findFontFiles(tempDir);
 

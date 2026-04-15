@@ -1,6 +1,6 @@
 export class ScrollStateManager {
-    private positions: Map<string, number> = new Map();
-    private lastUpdates: Map<string, number> = new Map();
+    private positions = new Map<string, number>();
+    private lastUpdates = new Map<string, number>();
     private readonly scrollInterval: number;
 
     constructor(scrollInterval = 300) {

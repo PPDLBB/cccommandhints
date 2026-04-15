@@ -6,7 +6,11 @@ import {
     type WidgetEditorDisplay,
     type WidgetItem
 } from '../types/Widget';
-import { getVisibleWidth, truncateStyledText } from '../utils/ansi';
+import {
+getVisibleWidth,
+truncateStyledText
+} from '../utils/ansi';
+
 import { getCommandGroups } from './command-hint/discovery';
 import { scrollManager } from './command-hint/scroll-manager';
 
@@ -17,10 +21,8 @@ export class CommandHintWidget implements Widget {
     getCategory(): string { return 'Help'; }
 
     getEditorDisplay(item: WidgetItem): WidgetEditorDisplay {
-        const scroll = item.metadata?.['scroll'] === 'true' ? 'scroll' : 'static';
-        return {
-            displayText: `${this.getDisplayName()} (multi-line, ${scroll})`
-        };
+        const scroll = item.metadata?.scroll === 'true' ? 'scroll' : 'static';
+        return { displayText: `${this.getDisplayName()} (multi-line, ${scroll})` };
     }
 
     render(item: WidgetItem, context: RenderContext, settings: Settings): string | null {
@@ -28,7 +30,7 @@ export class CommandHintWidget implements Widget {
         const terminalWidth = context.terminalWidth ?? 100;
         const isPreview = context.isPreview ?? false;
         const rawValue = item.rawValue ?? false;
-        const enableScroll = item.metadata?.['scroll'] !== 'false';
+        const enableScroll = item.metadata?.scroll !== 'false';
 
         if (isPreview) {
             if (rawValue) {
@@ -41,7 +43,7 @@ export class CommandHintWidget implements Widget {
     }
 
     private renderMultiLine(
-        commandGroups: Array<{ name: string; commands: Array<{ cmd: string; desc: string }> }>,
+        commandGroups: { name: string; commands: { cmd: string; desc: string }[] }[],
         width: number,
         rawValue: boolean,
         enableScroll: boolean,
@@ -67,29 +69,29 @@ export class CommandHintWidget implements Widget {
         return lines.join('\n');
     }
 
-    private buildCommandText(commands: Array<{ cmd: string; desc: string }>, rawValue: boolean): string {
+    private buildCommandText(commands: { cmd: string; desc: string }[], rawValue: boolean): string {
         const delimiter = rawValue ? ', ' : ' · ';
         return commands.map(cmd => `${cmd.cmd} ${cmd.desc}`).join(delimiter);
     }
 
     private rotateCommands(
-        commands: Array<{ cmd: string; desc: string }>,
+        commands: { cmd: string; desc: string }[],
         targetWidth: number,
         rawValue: boolean,
         startIndex: number
-    ): Array<{ cmd: string; desc: string }> {
+    ): { cmd: string; desc: string }[] {
         if (commands.length === 0) {
             return [];
         }
 
         const delimiter = rawValue ? ', ' : ' · ';
         const delimiterWidth = getVisibleWidth(delimiter);
-        const result: Array<{ cmd: string; desc: string }> = [];
+        const result: { cmd: string; desc: string }[] = [];
         let currentWidth = 0;
 
         for (let i = 0; i < commands.length; i++) {
             const cmdIndex = (startIndex + i) % commands.length;
-            const command = commands[cmdIndex]!;
+            const command = commands[cmdIndex] as { cmd: string; desc: string };
             const text = `${command.cmd} ${command.desc}`;
             const textWidth = getVisibleWidth(text);
             const addedWidth = result.length === 0 ? textWidth : delimiterWidth + textWidth;
@@ -112,7 +114,8 @@ export class CommandHintWidget implements Widget {
 
         while (index < text.length) {
             const codePoint = text.codePointAt(index);
-            if (codePoint === undefined) break;
+            if (codePoint === undefined)
+break;
             const char = String.fromCodePoint(codePoint);
             const charWidth = getVisibleWidth(char);
 
@@ -163,7 +166,7 @@ export class CommandHintWidget implements Widget {
 
     handleEditorAction(action: string, item: WidgetItem): WidgetItem | null {
         if (action === 'toggle-scroll') {
-            const currentScroll = item.metadata?.['scroll'] ?? 'true';
+            const currentScroll = item.metadata?.scroll ?? 'true';
             return {
                 ...item,
                 metadata: { ...item.metadata, scroll: currentScroll === 'true' ? 'false' : 'true' }

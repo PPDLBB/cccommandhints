@@ -106,8 +106,7 @@ export const StatusLinePreview: React.FC<StatusLinePreviewProps> = ({ lines, ter
                     <Text dimColor> Preview  (ctrl+s to save configuration at any time)</Text>
                 </Text>
             </Box>
-            {renderedLines.flatMap((line, index) =>
-                line.split('\n').map((subLine, subIndex) => (
+            {renderedLines.flatMap((line, index) => line.split('\n').map((subLine, subIndex) => (
                     <Text key={`${index}-${subIndex}`}>
                         {'  '}
                         {subLine}

@@ -109,6 +109,7 @@ export default ts.config([
             '@stylistic/eol-last': ['error', 'never'],
             '@stylistic/jsx-quotes': ['error', 'prefer-single'],
             '@stylistic/multiline-ternary': 'off',
+            '@typescript-eslint/non-nullable-type-assertion-style': 'off',
             'import/no-unresolved': ['error'],
             'import/no-named-as-default': 'off',
             'import/no-named-as-default-member': 'off',
@@ -141,6 +142,7 @@ export default ts.config([
             '**/dist/',
             '**/node_modules/',
             '**/*.js',
+            '.claude/**',
             '!eslint.config.js'
         ]
     }

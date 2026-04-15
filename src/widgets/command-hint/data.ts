@@ -115,7 +115,7 @@ for (const [cmd, desc] of Object.entries(EXTRA_DESCRIPTIONS)) {
 // 基于命令名关键词推断描述（兜底）
 export function inferCommandDesc(command: string): string {
     const lowered = command.toLowerCase();
-    const keywords: Array<[string | RegExp, string]> = [
+    const keywords: [string | RegExp, string][] = [
         ['login', '登录'],
         ['logout', '退出'],
         ['export', '导出'],
@@ -175,7 +175,8 @@ export function inferCommandDesc(command: string): string {
 
     for (const [pattern, desc] of keywords) {
         if (typeof pattern === 'string') {
-            if (lowered.includes(pattern)) return desc;
+            if (lowered.includes(pattern))
+return desc;
         } else if (pattern.test(lowered)) {
             return desc;
         }

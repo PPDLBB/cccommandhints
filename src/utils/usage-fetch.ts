@@ -402,7 +402,7 @@ function getUsageApiProxyUrl(): string | null {
 }
 
 function getUsageApiRequestOptions(token: string): https.RequestOptions | null {
-    const proxyUrl = getUsageApiProxyUrl();
+    void getUsageApiProxyUrl();
 
     try {
         return {

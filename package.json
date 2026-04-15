@@ -21,13 +21,13 @@
     "lint:fix": "bun tsc --noEmit && eslint . --config eslint.config.js --max-warnings=0 --fix"
   },
   "devDependencies": {
-    "@eslint/js": "^10.0.1",
+    "@eslint/js": "^8.57.0",
     "@stylistic/eslint-plugin": "^5.2.3",
     "@types/bun": "latest",
     "@types/pluralize": "^0.0.33",
     "@types/react": "^19.1.10",
     "chalk": "^5.5.0",
-    "eslint": "^10.0.0",
+    "eslint": "^8.57.0",
     "eslint-import-resolver-typescript": "^4.4.4",
     "eslint-plugin-import": "^2.32.0",
     "eslint-plugin-import-newlines": "^2.0.0",

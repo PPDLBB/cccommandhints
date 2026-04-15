@@ -49,7 +49,7 @@ function renderLine(
         terminalWidth: options.terminalWidth
     };
 
-    const preRenderedWidgets = widgets.map(widget => {
+    const preRenderedWidgets = widgets.map((widget) => {
         let content = '';
         if (widget.type === 'custom-text') {
             content = widget.customText ?? '';
@@ -213,18 +213,12 @@ describe('renderer ANSI/OSC handling', () => {
 describe('renderer minimalist mode', () => {
     it('renders widget as raw value when minimalist mode is enabled', () => {
         const widgets: WidgetItem[] = [{ id: 'model1', type: 'model' }];
-        const settings = createSettings();
-        const context: RenderContext = {
-            isPreview: true,
-            minimalist: true
-        };
 
         const preRenderedWidgets = [{
             content: 'Claude',
             plainLength: 6,
-            widget: widgets[0]!
+            widget: widgets[0] as WidgetItem
         }];
-        const preCalculatedMaxWidths = calculateMaxWidthsFromPreRendered([preRenderedWidgets], settings);
         const preRenderedLines = [preRenderedWidgets];
         const content = preRenderedLines[0]?.[0]?.content;
 
@@ -234,18 +228,12 @@ describe('renderer minimalist mode', () => {
 
     it('renders widget with label when minimalist mode is disabled', () => {
         const widgets: WidgetItem[] = [{ id: 'model1', type: 'model' }];
-        const settings = createSettings();
-        const context: RenderContext = {
-            isPreview: true,
-            minimalist: false
-        };
 
         const preRenderedWidgets = [{
             content: 'Model: Claude',
             plainLength: 13,
-            widget: widgets[0]!
+            widget: widgets[0] as WidgetItem
         }];
-        const preCalculatedMaxWidths = calculateMaxWidthsFromPreRendered([preRenderedWidgets], settings);
         const preRenderedLines = [preRenderedWidgets];
         const content = preRenderedLines[0]?.[0]?.content;
 

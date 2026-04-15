@@ -415,7 +415,7 @@ function renderPowerlineStatusLine(
     // Handle truncation if terminal width is known
     if (terminalWidth && terminalWidth > 0) {
         if (result.includes('\n')) {
-            result = result.split('\n').map(subLine => {
+            result = result.split('\n').map((subLine) => {
                 if (getVisibleWidth(subLine) > terminalWidth) {
                     return truncateStyledText(subLine, terminalWidth, { ellipsis: true });
                 }
@@ -860,7 +860,7 @@ export function renderStatusLine(
     if (maxWidth && maxWidth > 0) {
         if (statusLine.includes('\n')) {
             // Multi-line widget: truncate each physical line individually
-            statusLine = statusLine.split('\n').map(subLine => {
+            statusLine = statusLine.split('\n').map((subLine) => {
                 if (getVisibleWidth(subLine) > maxWidth) {
                     return truncateStyledText(subLine, maxWidth, { ellipsis: true });
                 }

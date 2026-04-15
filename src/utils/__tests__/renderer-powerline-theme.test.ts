@@ -44,7 +44,7 @@ function renderLine(settings: Settings, globalPowerlineThemeIndex: number): stri
     const preRenderedWidgets = [{
         content: 'tail',
         plainLength: 4,
-        widget: widgets[0]!
+        widget: widgets[0] as WidgetItem
     }];
     const preCalculatedMaxWidths = calculateMaxWidthsFromPreRendered([preRenderedWidgets], settings);
 

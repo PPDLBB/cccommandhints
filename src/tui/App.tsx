@@ -259,7 +259,7 @@ export const App: React.FC = () => {
         <Box flexDirection='column'>
             <Box marginBottom={1}>
                 <Text bold>
-                    <Text color="green">
+                    <Text color='green'>
                         CCCommandHints Configuration
                     </Text>
                 </Text>
