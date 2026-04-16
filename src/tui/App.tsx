@@ -31,8 +31,12 @@ import {
     loadSettings,
     saveSettings
 } from '../utils/config';
+import {
+    checkPowerlineFontsAsync,
+    installPowerlineFonts,
+    type PowerlineFontStatus
+} from '../utils/powerline';
 import { getPackageVersion } from '../utils/terminal';
-import { checkPowerlineFontsAsync, installPowerlineFonts, type PowerlineFontStatus } from '../utils/powerline';
 
 import {
     ColorMenu,
@@ -433,7 +437,7 @@ export const App: React.FC = () => {
                         onBack={() => {
                             setScreen('main');
                         }}
-                        onInstallFonts={handleInstallFonts}
+                        onInstallFonts={() => { void handleInstallFonts(); }}
                         installingFonts={installingFonts}
                         fontInstallMessage={fontInstallMessage}
                         onClearMessage={handleClearFontMessage}
