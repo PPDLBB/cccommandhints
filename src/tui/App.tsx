@@ -32,14 +32,20 @@ import {
     saveSettings
 } from '../utils/config';
 import { getPackageVersion } from '../utils/terminal';
+import { checkPowerlineFontsAsync, installPowerlineFonts, type PowerlineFontStatus } from '../utils/powerline';
 
 import {
     ColorMenu,
     ConfirmDialog,
+    GlobalOverridesMenu,
     InstallMenu,
+    ItemsEditor,
     LineSelector,
     MainMenu,
+    PowerlineSetup,
     StatusLinePreview,
+    TerminalOptionsMenu,
+    TerminalWidthMenu,
     type MainMenuOption
 } from './components';
 
@@ -49,8 +55,14 @@ interface FlashMessage {
 }
 
 type AppScreen = 'main'
+    | 'editLines'
+    | 'items'
     | 'colorLines'
     | 'colors'
+    | 'terminalOptions'
+    | 'terminalWidth'
+    | 'powerline'
+    | 'globalOverrides'
     | 'confirm'
     | 'install';
 
@@ -88,10 +100,14 @@ export const App: React.FC = () => {
     const [existingStatusLine, setExistingStatusLine] = useState<string | null>(null);
     const [flashMessage, setFlashMessage] = useState<FlashMessage | null>(null);
     const [previewIsTruncated, setPreviewIsTruncated] = useState(false);
+    const [powerlineFontStatus, setPowerlineFontStatus] = useState<PowerlineFontStatus>({ installed: false });
+    const [installingFonts, setInstallingFonts] = useState(false);
+    const [fontInstallMessage, setFontInstallMessage] = useState<string | null>(null);
 
     useEffect(() => {
         // Load existing status line
         void getExistingStatusLine().then(setExistingStatusLine);
+        void checkPowerlineFontsAsync().then(setPowerlineFontStatus);
 
         void loadSettings().then((loadedSettings) => {
             // Set global chalk level based on settings (default to 256 colors for compatibility)
@@ -190,6 +206,25 @@ export const App: React.FC = () => {
         setScreen('main');
     }, []);
 
+    const handleInstallFonts = useCallback(async () => {
+        setInstallingFonts(true);
+        setFontInstallMessage(null);
+        try {
+            const result = await installPowerlineFonts();
+            setFontInstallMessage(result.message);
+            if (result.success) {
+                const status = await checkPowerlineFontsAsync();
+                setPowerlineFontStatus(status);
+            }
+        } finally {
+            setInstallingFonts(false);
+        }
+    }, []);
+
+    const handleClearFontMessage = useCallback(() => {
+        setFontInstallMessage(null);
+    }, []);
+
     if (!settings) {
         return <Text>Loading settings...</Text>;
     }
@@ -216,8 +251,20 @@ export const App: React.FC = () => {
 
     const handleMainMenuSelect = async (value: MainMenuOption) => {
         switch (value) {
+            case 'editLines':
+                setScreen('editLines');
+                break;
             case 'colors':
                 setScreen('colorLines');
+                break;
+            case 'terminalOptions':
+                setScreen('terminalOptions');
+                break;
+            case 'powerline':
+                setScreen('powerline');
+                break;
+            case 'globalOverrides':
+                setScreen('globalOverrides');
                 break;
             case 'install':
                 handleInstallUninstall();
@@ -284,6 +331,40 @@ export const App: React.FC = () => {
                         previewIsTruncated={previewIsTruncated}
                     />
                 )}
+                {screen === 'editLines' && (
+                    <LineSelector
+                        lines={settings.lines}
+                        onLinesUpdate={updateLines}
+                        onSelect={(line) => {
+                            setMenuSelections(prev => ({ ...prev, lines: line }));
+                            setSelectedLine(line);
+                            setScreen('items');
+                        }}
+                        onBack={() => {
+                            setMenuSelections(prev => ({ ...prev, main: 0 }));
+                            setScreen('main');
+                        }}
+                        initialSelection={menuSelections.lines}
+                        title='Select Line to Edit'
+                        allowEditing={true}
+                        settings={settings}
+                    />
+                )}
+                {screen === 'items' && (
+                    <ItemsEditor
+                        widgets={settings.lines[selectedLine] ?? []}
+                        onUpdate={(updatedWidgets) => {
+                            const newLines = [...settings.lines];
+                            newLines[selectedLine] = updatedWidgets;
+                            setSettings({ ...settings, lines: newLines });
+                        }}
+                        onBack={() => {
+                            setScreen('editLines');
+                        }}
+                        lineNumber={selectedLine + 1}
+                        settings={settings}
+                    />
+                )}
                 {screen === 'colorLines' && (
                     <LineSelector
                         lines={settings.lines}
@@ -294,8 +375,8 @@ export const App: React.FC = () => {
                             setScreen('colors');
                         }}
                         onBack={() => {
-                            // Save that we came from 'colors' menu (index 0)
-                            setMenuSelections(prev => ({ ...prev, main: 0 }));
+                            // Save that we came from 'colors' menu (index 1)
+                            setMenuSelections(prev => ({ ...prev, main: 1 }));
                             setScreen('main');
                         }}
                         initialSelection={menuSelections.lines}
@@ -319,6 +400,51 @@ export const App: React.FC = () => {
                         onBack={() => {
                             // Go back to line selection for colors
                             setScreen('colorLines');
+                        }}
+                    />
+                )}
+                {screen === 'terminalOptions' && (
+                    <TerminalOptionsMenu
+                        settings={settings}
+                        onUpdate={setSettings}
+                        onBack={(target) => {
+                            if (target === 'width') {
+                                setScreen('terminalWidth');
+                            } else {
+                                setScreen('main');
+                            }
+                        }}
+                    />
+                )}
+                {screen === 'terminalWidth' && (
+                    <TerminalWidthMenu
+                        settings={settings}
+                        onUpdate={setSettings}
+                        onBack={() => {
+                            setScreen('terminalOptions');
+                        }}
+                    />
+                )}
+                {screen === 'powerline' && (
+                    <PowerlineSetup
+                        settings={settings}
+                        powerlineFontStatus={powerlineFontStatus}
+                        onUpdate={setSettings}
+                        onBack={() => {
+                            setScreen('main');
+                        }}
+                        onInstallFonts={handleInstallFonts}
+                        installingFonts={installingFonts}
+                        fontInstallMessage={fontInstallMessage}
+                        onClearMessage={handleClearFontMessage}
+                    />
+                )}
+                {screen === 'globalOverrides' && (
+                    <GlobalOverridesMenu
+                        settings={settings}
+                        onUpdate={setSettings}
+                        onBack={() => {
+                            setScreen('main');
                         }}
                     />
                 )}

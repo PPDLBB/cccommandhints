@@ -8,7 +8,11 @@ import type { Settings } from '../../types/Settings';
 
 import { List } from './List';
 
-export type MainMenuOption = 'colors'
+export type MainMenuOption = 'editLines'
+    | 'colors'
+    | 'terminalOptions'
+    | 'powerline'
+    | 'globalOverrides'
     | 'install'
     | 'save'
     | 'exit';
@@ -37,10 +41,35 @@ export const MainMenu: React.FC<MainMenuProps> = ({
         description: string;
     } | '-')[] = [
         {
+            label: '📝 Edit Lines',
+            value: 'editLines',
+            description:
+                'Add, remove, and reorder widgets on each status line'
+        },
+        {
             label: '🎨 Edit Colors',
             value: 'colors',
             description:
                 'Customize foreground colors for widgets on each line'
+        },
+        '-' as const,
+        {
+            label: '⚙ Terminal Options',
+            value: 'terminalOptions',
+            description:
+                'Configure terminal width and color level settings'
+        },
+        {
+            label: '▓ Powerline',
+            value: 'powerline',
+            description:
+                'Enable and configure powerline-style separators and themes'
+        },
+        {
+            label: '🌐 Global Overrides',
+            value: 'globalOverrides',
+            description:
+                'Set global padding, separators, bold, and minimalist mode'
         },
         '-' as const,
         {
